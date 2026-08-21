@@ -32,6 +32,65 @@ function Register({ onMode }) {
   if (step === 'otp') return <><div className="auth-heading"><span className="auth-icon"><Mail size={20} /></span><span className="auth-kicker">VERIFY YOUR EMAIL</span><h2>Check your inbox.</h2><p>We sent a six-digit code to <strong>{form.email}</strong>.</p></div>{notice && <Notice tone="error" onClose={() => setNotice('')}>{notice}</Notice>}<form className="auth-form" onSubmit={verify}><label className="auth-field"><span>Verification code</span><input className="otp-input" inputMode="numeric" maxLength={6} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} placeholder="000000" autoFocus /></label><button className="auth-submit" type="submit">Verify email <CheckCircle2 size={17} /></button><button className="resend" type="button" disabled={cooldown > 0} onClick={() => setCooldown(30)}>{cooldown ? `Resend code in ${cooldown}s` : 'Resend code'}</button><p className="demo-hint">Demo code: <strong>123456</strong></p></form></>
   return <><div className="auth-heading"><span className="auth-icon"><UserRound size={20} /></span><span className="auth-kicker">START YOUR JOURNEY</span><h2>Create your account.</h2><p>Join thousands of curious learners building what&apos;s next.</p></div>{notice && <Notice tone="error" onClose={() => setNotice('')}>{notice}</Notice>}<form className="auth-form" onSubmit={submit} noValidate><Field label="Full name" id="register-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Alex Morgan" icon={UserRound} error={errors.name} /><Field label="Email address" id="register-email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="you@example.com" icon={Mail} error={errors.email} /><Field label="Password" id="register-password" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="At least 8 characters" icon={KeyRound} error={errors.password} /><button className="auth-submit" type="submit">Create account <ArrowRight size={17} /></button></form></> }
 
-function ResetModal({ onClose }) { const [step, setStep] = useState('email'); const [email, setEmail] = useState(''); const [code, setCode] = useState(''); const [password, setPassword] = useState(''); const [error, setError] = useState(''); const [cooldown, setCooldown] = useState(0); useEffect(() => { if (!cooldown) return; const timer = setInterval(() => setCooldown((value) => value - 1), 1000); return () => clearInterval(timer) }, [cooldown]); function send(e) { e.preventDefault(); if (!emailPattern.test(email)) { setError('Enter a valid email address.'); return } setError(''); setStep('reset'); setCooldown(30) } function reset(e) { e.preventDefault(); if (code !== demoCode || password.length < 8) { setError(code !== demoCode ? 'Use the six-digit demo code 123456.' : 'New password must be at least 8 characters.'); return } setStep('done') } return <div className="modal-backdrop" role="presentation"><div className="reset-modal" role="dialog" aria-modal="true" aria-labelledby="reset-title"><button className="modal-close" onClick={onClose} aria-label="Close dialog"><X size={18} /></button>{step === 'done' ? <div className="modal-success"><CheckCircle2 size={36} /><h2>Password updated.</h2><p>You can now log in with your new password.</p><button className="auth-submit" onClick={onClose}>Return to login</button></div> : <><span className="auth-kicker">ACCOUNT RECOVERY</span><h2 id="reset-title">Reset your password.</h2><p className="modal-copy">{step === 'email' ? 'We&apos;ll send a verification code to your email.' : `Enter the code sent to ${email} and choose a new password.`}</p>{error && <Notice tone="error">{error}</Notice>}<form className="auth-form" onSubmit={step === 'email' ? send : reset}>{step === 'email' ? <Field label="Email address" id="reset-email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" icon={Mail} /> : <><label className="auth-field"><span>Verification code</span><input className="otp-input" inputMode="numeric" maxLength={6} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} placeholder="000000" autoFocus /></label><Field label="New password" id="new-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 8 characters" icon={KeyRound} /></>}<button className="auth-submit" type="submit">{step === 'email' ? 'Send code' : 'Update password'} <ArrowRight size={17} /></button>{step === 'reset' && <button className="resend" type="button" disabled={cooldown > 0} onClick={() => setCooldown(30)}>{cooldown ? `Resend code in ${cooldown}s` : 'Resend code'}</button>}<p className="demo-hint">Demo code: <strong>123456</strong></p></form></>}</div></div> }
+function ResetModal({ onClose }) {
+  const [step, setStep] = useState('email')
+  const [email, setEmail] = useState('')
+  const [code, setCode] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [error, setError] = useState('')
+  const [cooldown, setCooldown] = useState(0)
+
+  useEffect(() => {
+    if (!cooldown) return
+    const timer = setInterval(() => setCooldown((value) => value - 1), 1000)
+    return () => clearInterval(timer)
+  }, [cooldown])
+
+  function sendCode(event) {
+    event.preventDefault()
+    if (!emailPattern.test(email)) {
+      setError('Enter a valid email address.')
+      return
+    }
+    setError('')
+    setStep('otp')
+    setCooldown(30)
+  }
+
+  function verifyCode(event) {
+    event.preventDefault()
+    if (code !== demoCode) {
+      setError('Use the six-digit demo code 123456.')
+      return
+    }
+    setError('')
+    setStep('password')
+  }
+
+  function updatePassword(event) {
+    event.preventDefault()
+    if (password.length < 8) {
+      setError('New password must be at least 8 characters.')
+      return
+    }
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.')
+      return
+    }
+    setError('')
+    setStep('done')
+  }
+
+  if (step === 'done') {
+    return <div className="modal-backdrop" role="presentation"><div className="reset-modal" role="dialog" aria-modal="true" aria-labelledby="reset-title"><button className="modal-close" onClick={onClose} aria-label="Close dialog"><X size={18} /></button><div className="modal-success"><CheckCircle2 size={36} /><h2>Password updated.</h2><p>You can now log in with your new password.</p><button className="auth-submit" onClick={onClose}>Return to login</button></div></div></div>
+  }
+
+  const isOtp = step === 'otp'
+  const isPassword = step === 'password'
+  const submit = isOtp ? verifyCode : isPassword ? updatePassword : sendCode
+
+  return <div className="modal-backdrop" role="presentation"><div className="reset-modal" role="dialog" aria-modal="true" aria-labelledby="reset-title"><button className="modal-close" onClick={onClose} aria-label="Close dialog"><X size={18} /></button><span className="auth-kicker">ACCOUNT RECOVERY</span><h2 id="reset-title">{isPassword ? 'Create a new password.' : isOtp ? 'Verify your email.' : 'Reset your password.'}</h2><p className="modal-copy">{isPassword ? 'Choose a strong password for your account.' : isOtp ? `Enter the code sent to ${email}.` : "We'll send a verification code to your email."}</p>{error && <Notice tone="error">{error}</Notice>}<form className="auth-form" onSubmit={submit}>{!isOtp && !isPassword && <Field label="Email address" id="reset-email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" icon={Mail} />}{isOtp && <><label className="auth-field"><span>Verification code</span><input className="otp-input" inputMode="numeric" maxLength={6} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} placeholder="000000" autoFocus /></label><button className="resend" type="button" disabled={cooldown > 0} onClick={() => setCooldown(30)}>{cooldown ? `Resend code in ${cooldown}s` : 'Resend code'}</button><p className="demo-hint">Demo code: <strong>123456</strong></p></>}{isPassword && <><Field label="New password" id="reset-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 8 characters" icon={KeyRound} /><Field label="Confirm password" id="reset-confirm-password" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Re-enter your password" icon={KeyRound} /></>}<button className="auth-submit" type="submit">{isOtp ? 'Verify code' : isPassword ? 'Update password' : 'Send code'} <ArrowRight size={17} /></button></form></div></div>
+}
 
 export default function AuthPage() { const [mode, setMode] = useState('login'); const [forgot, setForgot] = useState(false); const heading = useMemo(() => mode, [mode]); return <AuthShell mode={heading} onMode={setMode}>{mode === 'login' ? <Login onMode={setMode} onForgot={() => setForgot(true)} /> : <Register onMode={setMode} />}{forgot && <ResetModal onClose={() => setForgot(false)} />}</AuthShell> }
