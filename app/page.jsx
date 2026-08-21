@@ -1,3 +1,6 @@
+'use client'
+
+import { useRouter } from 'next/navigation'
 import {
   ArrowRight,
   BarChart3,
@@ -36,8 +39,8 @@ const benefits = [
   { icon: Play, title: 'Learn by doing', text: 'Turn theory into confidence through guided projects, challenges, and meaningful feedback.' },
 ]
 
-function Button({ children, secondary = false }) {
-  return <button className={secondary ? 'button button-secondary' : 'button'}>{children}</button>
+function Button({ children, secondary = false, onClick }) {
+  return <button type="button" onClick={onClick} className={secondary ? 'button button-secondary' : 'button'}>{children}</button>
 }
 
 function Logo() {
@@ -45,13 +48,16 @@ function Logo() {
 }
 
 export default function Page() {
+  const router = useRouter()
+  const goToAuth = () => router.push('/auth')
+
   return (
     <main id="top" className="min-h-screen bg-slate-950 text-slate-100">
       <nav className="nav-shell" aria-label="Main navigation">
-        <div className="container nav-inner"><Logo /><div className="nav-links"><a href="#courses">Courses</a><a href="#features">Features</a><a href="#pricing">Pricing</a></div><div className="nav-actions"><button className="login-button">Log in</button><Button>Get started <ArrowRight size={16} /></Button></div></div>
+        <div className="container nav-inner"><Logo /><div className="nav-links"><a href="#courses">Courses</a><a href="#features">Features</a><a href="#pricing">Pricing</a></div><div className="nav-actions"><button type="button" className="login-button" onClick={goToAuth}>Log in</button><Button onClick={goToAuth}>Get started <ArrowRight size={16} /></Button></div></div>
       </nav>
 
-      <section className="hero section"><div className="container hero-grid"><div className="hero-copy"><div className="eyebrow"><span className="eyebrow-dot" /> Learning for what&apos;s next</div><h1>Build skills.<br /><span>Shape your future.</span></h1><p className="hero-text">Nexora is the modern learning platform for curious minds. Learn from experts, build real projects, and move forward with confidence.</p><div className="hero-actions"><Button>Browse courses <ArrowRight size={17} /></Button><Button secondary><Play size={16} fill="currentColor" /> Try for free</Button></div><div className="stats"><div><strong>10,000<span>+</span></strong><small>Active learners</small></div><div className="stat-divider" /><div><strong>4.9<span>/5</span></strong><small>Learner rating</small></div><div className="stat-divider" /><div><strong>240<span>+</span></strong><small>Expert courses</small></div></div></div><div className="hero-visual"><div className="visual-card"><div className="visual-top"><span className="live-label"><span /> Live learning</span><span className="visual-menu">•••</span></div><div className="visual-illustration"><div className="orbit orbit-one" /><div className="orbit orbit-two" /><div className="visual-spark spark-one">✦</div><div className="visual-spark spark-two">✦</div><div className="play-badge"><Play size={20} fill="currentColor" /></div><div className="visual-caption"><span>01</span><div><strong>Make ideas real</strong><small>Project-based learning</small></div></div></div></div><div className="floating-note note-one"><span className="note-icon"><Check size={15} /></span><div><strong>Course complete</strong><small>Keep the momentum going</small></div></div><div className="floating-note note-two"><Users size={17} /><strong>2.4k learning now</strong></div></div></div></section>
+      <section className="hero section"><div className="container hero-grid"><div className="hero-copy"><div className="eyebrow"><span className="eyebrow-dot" /> Learning for what&apos;s next</div><h1>Build skills.<br /><span>Shape your future.</span></h1><p className="hero-text">Nexora is the modern learning platform for curious minds. Learn from experts, build real projects, and move forward with confidence.</p><div className="hero-actions"><Button onClick={goToAuth}>Browse courses <ArrowRight size={17} /></Button><Button secondary onClick={goToAuth}><Play size={16} fill="currentColor" /> Try for free</Button></div><div className="stats"><div><strong>10,000<span>+</span></strong><small>Active learners</small></div><div className="stat-divider" /><div><strong>4.9<span>/5</span></strong><small>Learner rating</small></div><div className="stat-divider" /><div><strong>240<span>+</span></strong><small>Expert courses</small></div></div></div><div className="hero-visual"><div className="visual-card"><div className="visual-top"><span className="live-label"><span /> Live learning</span><span className="visual-menu">•••</span></div><div className="visual-illustration"><div className="orbit orbit-one" /><div className="orbit orbit-two" /><div className="visual-spark spark-one">✦</div><div className="visual-spark spark-two">✦</div><div className="play-badge"><Play size={20} fill="currentColor" /></div><div className="visual-caption"><span>01</span><div><strong>Make ideas real</strong><small>Project-based learning</small></div></div></div></div><div className="floating-note note-one"><span className="note-icon"><Check size={15} /></span><div><strong>Course complete</strong><small>Keep the momentum going</small></div></div><div className="floating-note note-two"><Users size={17} /><strong>2.4k learning now</strong></div></div></div></section>
 
       <section className="section categories" id="courses"><div className="container"><div className="section-heading"><div><span className="kicker">EXPLORE YOUR INTERESTS</span><h2>There&apos;s always more to learn.</h2></div><a className="text-link" href="#featured">View all categories <ArrowRight size={16} /></a></div><div className="category-grid">{categories.map(({ name, count, icon: Icon }) => <a className="category-card" href="#featured" key={name}><span className="category-icon"><Icon size={21} /></span><span><strong>{name}</strong><small>{count}</small></span><ArrowRight className="category-arrow" size={17} /></a>)}</div></div></section>
 
@@ -59,7 +65,7 @@ export default function Page() {
 
       <section className="section benefits" id="features"><div className="container"><div className="benefits-intro"><span className="kicker">WHY NEXORA</span><h2>Learning that<br /><em>moves you forward.</em></h2><p>Less passive watching. More doing, creating, and becoming the person you want to be.</p></div><div className="benefit-grid">{benefits.map(({ icon: Icon, title, text }) => <article className="benefit" key={title}><span className="benefit-icon"><Icon size={22} /></span><h3>{title}</h3><p>{text}</p><a href="#pricing">Learn more <ArrowRight size={15} /></a></article>)}</div></div></section>
 
-      <section className="section cta" id="pricing"><div className="container"><div className="cta-panel"><div><span className="kicker">YOUR NEXT CHAPTER STARTS HERE</span><h2>Ready to learn<br /><span>something new?</span></h2><p>Join a community of people building what&apos;s next.</p></div><div className="cta-action"><Button>Start learning for free <ArrowRight size={17} /></Button><small>No credit card required</small></div></div></div></section>
+      <section className="section cta" id="pricing"><div className="container"><div className="cta-panel"><div><span className="kicker">YOUR NEXT CHAPTER STARTS HERE</span><h2>Ready to learn<br /><span>something new?</span></h2><p>Join a community of people building what&apos;s next.</p></div><div className="cta-action"><Button onClick={goToAuth}>Start learning for free <ArrowRight size={17} /></Button><small>No credit card required</small></div></div></div></section>
 
       <footer className="footer"><div className="container footer-top"><Logo /><div className="footer-links"><a href="#courses">Courses</a><a href="#features">About</a><a href="#pricing">Pricing</a><a href="#features">Help center</a></div><div className="socials"><a href="#footer" aria-label="LinkedIn"><Globe2 size={17} /></a><a href="#footer" aria-label="Instagram"><Palette size={17} /></a><a href="#footer" aria-label="Facebook"><Layers3 size={17} /></a></div></div><div className="container footer-bottom"><span>© 2024 Nexora Learning, Inc.</span><span>Made for the endlessly curious.</span></div></footer>
     </main>
