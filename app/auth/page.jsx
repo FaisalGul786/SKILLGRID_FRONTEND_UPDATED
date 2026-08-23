@@ -10,5 +10,14 @@ export default function AuthPage() {
   const [mode, setMode] = useState('login')
   const [forgot, setForgot] = useState(false)
 
-  return <AuthShell mode={mode} onMode={setMode}>{mode === 'login' ? <LoginPage onForgot={() => setForgot(true)} /> : <RegisterPage onMode={setMode} />}{forgot && <ResetModal onClose={() => setForgot(false)} />}</AuthShell>
+  return (
+    <AuthShell mode={mode} onMode={setMode}>
+      {mode === 'login' ? (
+        <LoginPage onForgot={() => setForgot(true)} />
+      ) : (
+        <RegisterPage onMode={setMode} />
+      )}
+      {forgot && <ResetModal onClose={() => setForgot(false)} />}
+    </AuthShell>
+  )
 }
