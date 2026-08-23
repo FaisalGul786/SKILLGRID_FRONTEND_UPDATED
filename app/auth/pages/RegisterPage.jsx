@@ -6,11 +6,13 @@ import {
   CheckCircle2,
   KeyRound,
   Mail,
+  Loader2,
   UserRound,
 } from 'lucide-react'
 import Field from '../components/Field'
 import Notice from '../components/Notice'
 import { demoCode, emailPattern } from '../components/constants'
+import { api } from '../../../lib/apiClient'
 
 export default function RegisterPage({ onMode }) {
   const [step, setStep] = useState('form')
@@ -19,13 +21,16 @@ export default function RegisterPage({ onMode }) {
   const [code, setCode] = useState('')
   const [notice, setNotice] = useState('')
   const [cooldown, setCooldown] = useState(0)
+  const [tempKey, setTempKey] = useState('')
+  const [loading, setLoading] = useState(false)
+
   useEffect(() => {
     if (!cooldown) return
     const timer = setInterval(() => setCooldown((value) => value - 1), 1000)
     return () => clearInterval(timer)
   }, [cooldown])
 
-  function submit(event) {
+  async function submit(event) {
     event.preventDefault()
     const next = {}
     if (!form.name.trim()) next.name = 'Tell us your name.'
@@ -34,22 +39,49 @@ export default function RegisterPage({ onMode }) {
     if (form.password.length < 8) next.password = 'Use at least 8 characters.'
     setErrors(next)
 
-    console.log(`******* ${!Object.keys(next).length}`)
-
     if (!Object.keys(next).length) {
+      setLoading(true)
+      console.log('\n ******** form data ', form)
+      const [err, data] = await api.post('/auth/register', form)
+
+      console.log('******** account temp key ', data)
+
+      setLoading(false)
+
+      if (err) {
+        console.log('********** ', err)
+        setNotice(err.message)
+        return
+      }
+
+      setTempKey(`${data.registerKey}`)
       setStep('otp')
       setCooldown(30)
+      setNotice('')
     }
   }
-  function verify(event) {
+  async function verify(event) {
     event.preventDefault()
-    if (code !== demoCode) {
-      setNotice('That code is not valid. Use the demo code 123456.')
+
+    setLoading(true)
+    const [err, data] = await api.post('/auth/verify/otp', {
+      otp: code,
+      registerKey: tempKey,
+    })
+
+    setLoading(false)
+
+    if (err) {
+      console.log('\n ******* error while verifying otp ', err)
+      setNotice(err.message)
       return
     }
-    sessionStorage.setItem('nexora-profile', JSON.stringify(form))
+
+    console.log('**********data after otp Verification  ', data)
+    setNotice(data.message)
     onMode('login')
   }
+
   if (step === 'otp')
     return (
       <>
@@ -79,10 +111,17 @@ export default function RegisterPage({ onMode }) {
               onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
               placeholder="000000"
               autoFocus
+              disabled={loading}
             />
           </label>
-          <button className="auth-submit" type="submit">
-            Verify email <CheckCircle2 size={17} />
+
+          <button className="auth-submit" type="submit" disabled={loading}>
+            {loading ? 'Verifying...' : 'Verify email'}
+            {loading ? (
+              <Loader2 size={17} className="animate-spin" />
+            ) : (
+              <CheckCircle2 size={17} />
+            )}
           </button>
           <button
             className="resend"
@@ -142,8 +181,13 @@ export default function RegisterPage({ onMode }) {
           icon={KeyRound}
           error={errors.password}
         />
-        <button className="auth-submit" type="submit">
-          Create account <ArrowRight size={17} />
+        <button className="auth-submit" type="submit" disabled={loading}>
+          {loading ? 'Creating account...' : 'Create account'}
+          {loading ? (
+            <Loader2 size={17} className="animate-spin" />
+          ) : (
+            <ArrowRight size={17} />
+          )}
         </button>
       </form>
     </>
