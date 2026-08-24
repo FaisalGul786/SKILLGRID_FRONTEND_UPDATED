@@ -33,6 +33,9 @@ export default function LoginPage({ onForgot }) {
           password,
         },
         {
+          headers: {
+            'Content-Type': 'application/json',
+          },
           credentials: 'include',
         },
       )
