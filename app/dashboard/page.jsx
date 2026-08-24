@@ -16,6 +16,7 @@ import {
   X,
 } from 'lucide-react'
 
+import { api } from '../../lib/apiClient'
 const initialCourses = [
   {
     id: 'course-1',
@@ -92,19 +93,6 @@ export default function DashboardPage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
-  useEffect(() => {
-    const session = sessionStorage.getItem('nexora-auth')
-    if (!session) {
-      window.location.href = '/auth'
-      return
-    }
-    try {
-      setEmail(JSON.parse(session).email || 'instructor@example.com')
-    } catch {
-      setEmail('instructor@example.com')
-    }
-  }, [])
-
   const canCreate = useMemo(
     () =>
       form.title.trim() &&
@@ -137,47 +125,122 @@ export default function DashboardPage() {
   }
 
   async function uploadThumbnail(file) {
+    // 1. Validation
     if (!file || !file.type.startsWith('image/')) {
-      setError('Please choose a valid image file.')
-      return
+      return setError('Please choose a valid image file.')
     }
     if (file.size > 5 * 1024 * 1024) {
-      setError('Thumbnail must be smaller than 5MB.')
-      return
+      return setError('Thumbnail must be smaller than 5MB.')
     }
+
     setError('')
     setIsUploadingImage(true)
+
     try {
-      await delay(650)
-      const signature = {
-        success: true,
-        signature: 'mock-signature',
-        timestamp: Math.floor(Date.now() / 1000),
-        folder: 'nexora/courses',
-        apiKey: 'mock-api-key',
-        cloudName: 'mock-cloud',
+      // 2. Fetch Signature
+      const [sigErr, sigData] = await api.get('/media/upload/signature', {
+        credentials: 'include',
+      })
+
+      console.log(`**** err & data from signature `, sigErr, sigData)
+      if (sigErr) {
+        return setError(sigErr.message || 'Failed to generate upload signature')
       }
-      if (!signature.success)
-        throw new Error('Unable to generate upload signature.')
-      await delay(900)
-      const secureUrl = `https://res.cloudinary.com/demo/image/upload/v1/nexora/courses/${encodeURIComponent(file.name.replace(/\.[^/.]+$/, ''))}.jpg`
-      setForm((current) => ({ ...current, thumbnail: secureUrl }))
-    } catch (uploadError) {
-      setError(uploadError.message || 'Thumbnail upload failed.')
+
+      // 3. Prepare Payload
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('signature', sigData.signature)
+      formData.append('timestamp', sigData.timestamp)
+      formData.append('folder', sigData.folder)
+      formData.append('api_key', sigData.apiKey)
+
+      console.log(
+        `******** multipart form data before uploading to cloudinary `,
+        formData,
+      )
+      // 4. Upload to Cloudinary
+      const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${sigData.cloudName}/image/upload`
+      const [uploadErr, uploadData] = await api.post(cloudinaryUrl, formData)
+
+      console.log(`********* cloudinary `, uploadErr, uploadData)
+
+      if (uploadErr) {
+        return setError(uploadErr.message || 'Image upload failed')
+      }
+
+      // 5. Success
+      setForm((current) => ({ ...current, thumbnail: uploadData.secure_url }))
+    } catch (error) {
+      // Catches unexpected JavaScript runtime crashes (e.g., undefined property access)
+      console.error('Unexpected upload error:', error)
+      setError('An unexpected error occurred during upload.')
     } finally {
+      // Guaranteed to run on success, error, or early return
       setIsUploadingImage(false)
     }
   }
+  // async function uploadThumbnail(file) {
+  //   console.log('********** File uploaded *********', file)
+  //   if (!file || !file.type.startsWith('image/')) {
+  //     setError('Please choose a valid image file.')
+  //     return
+  //   }
+  //   if (file.size > 5 * 1024 * 1024) {
+  //     setError('Thumbnail must be smaller than 5MB.')
+  //     return
+  //   }
+  //   setError('')
+  //   setIsUploadingImage(true)
+
+  //   /* getting Signature **/
+
+  //   const [err, data] = await api.get('/media/upload/signature', {
+  //     credentials: 'include',
+  //   })
+  //   console.log(`****** err & signature `, err, data)
+
+  //   if (err.success === false) {
+  //     setError(err.message || 'no signature generated 🙅🏿‍♂️')
+  //     setIsUploadingImage(false)
+  //     return
+  //   }
+  //   const formData = new FormData()
+  //   formData.append('file', file)
+  //   formData.append('signature', response.signature)
+  //   formData.append('timestamp', response.timestamp)
+  //   formData.append('folder', response.folder)
+  //   formData.append('api_key', response.apiKey)
+
+  //   console.log(`****** send form data `, formData)
+
+  //   const cloudinary = `https://api.cloudinary.com/v1_1/${err.cloudName}/image/upload`
+  //   console.log(`cloudinary response `, cloudinary)
+  //   setForm((current) => ({ ...current, thumbnail: cloudinary.secure_url }))
+
+  //   setIsUploadingImage(false)
+  //   return
+  // }
 
   function handleFileChange(event) {
+    console.log(
+      '************* event.target.files?.[0] ',
+      event.target.files?.[0],
+    )
+
     uploadThumbnail(event.target.files?.[0])
   }
   function handleDrop(event) {
     event.preventDefault()
+    console.log(
+      `********* event.dataTransfer.files?.[0] `,
+      event.dataTransfer.files?.[0],
+    )
     uploadThumbnail(event.dataTransfer.files?.[0])
   }
 
   async function createCourse(event) {
+    console.log('******* form before sending database ', form)
     event.preventDefault()
     if (
       !form.title.trim() ||
@@ -192,17 +255,24 @@ export default function DashboardPage() {
     }
     setError('')
     setIsSubmitting(true)
-    await delay(850)
-    const course = {
-      ...form,
-      id: `course-${Date.now()}`,
-      title: form.title.trim(),
-      category: form.category.trim(),
-      price: Number(form.price) || 0,
+
+    const [courseErr, courseData] = await api.post('/course/create', form, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    })
+
+    console.log(`***** course Error , course Data `, courseErr, courseData)
+
+    if (courseErr) {
+      setError(courseErr.message)
+      setIsUploadingImage(false)
+      return
     }
-    setCourses((current) => [course, ...current])
-    setSuccess('Course is created successfully.')
-    await delay(1500)
+
+    setSuccess(courseData.message)
+
     setForm(emptyForm)
     setSuccess('')
     setIsSubmitting(false)
