@@ -1,39 +1,26 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
-import { ArrowLeft, BookOpen, CheckCircle2, ChevronLeft, ChevronRight, Download, FileText, Lock, LogOut, Play, Sparkles, X } from 'lucide-react'
-
-const courses = [
-  { id: 'course-1', title: 'Full-Stack Web Development', description: 'Build modern web applications from interface to deployment.', category: 'Development', difficulty: 'intermediate', price: 0, status: 'published', thumbnail: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=900&q=80', lessons: [{ id: 'lesson-1', title: 'The modern web stack', duration: '12 min', notes: 'Learn how the browser, server, and database work together.', videoUrl: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4', attachment: 'Web-stack-cheatsheet.pdf' }, { id: 'lesson-2', title: 'Build your first interface', duration: '24 min', notes: 'Compose accessible interfaces with reusable components.', videoUrl: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4', attachment: 'Interface-notes.pdf' }, { id: 'lesson-3', title: 'Ship to production', duration: '18 min', notes: 'A practical checklist for deploying your application.', videoUrl: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4' }] },
-  { id: 'course-2', title: 'Practical Data Science', description: 'Turn raw data into decisions with practical analysis skills.', category: 'Data Science', difficulty: 'beginner', price: 0, status: 'published', thumbnail: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=900&q=80', lessons: [{ id: 'lesson-4', title: 'Your data toolkit', duration: '16 min', notes: 'Set up a repeatable process for exploring datasets.', videoUrl: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4' }] },
-  { id: 'course-3', title: 'Product Design Systems', description: 'Create consistent, accessible systems that scale with teams.', category: 'Design', difficulty: 'advanced', price: 99, status: 'published', thumbnail: 'https://images.unsplash.com/photo-1558655146-d09347e92766?auto=format&fit=crop&w=900&q=80', lessons: [{ id: 'lesson-5', title: 'System foundations', duration: '20 min', notes: 'Define tokens, patterns, and principles for scale.', videoUrl: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4' }] },
-  { id: 'course-4', title: 'JavaScript Essentials', description: 'Master the language that powers the interactive web.', category: 'Development', difficulty: 'beginner', price: 49, status: 'published', thumbnail: 'https://images.unsplash.com/photo-1627398242454-45a1465c2479?auto=format&fit=crop&w=900&q=80', lessons: [{ id: 'lesson-6', title: 'Functions and flow', duration: '15 min', notes: 'Write clear, composable JavaScript.', videoUrl: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4' }] },
-  { id: 'course-5', title: 'UX Research Fieldwork', description: 'Turn conversations into confident product decisions.', category: 'Design', difficulty: 'intermediate', price: 0, status: 'published', thumbnail: 'https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=900&q=80', lessons: [{ id: 'lesson-7', title: 'Interview planning', duration: '14 min', notes: 'Prepare questions that reveal useful insight.', videoUrl: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4' }] },
-]
-
-function Header({ email, role, setRole, logout }) { return <header className="dashboard-header"><a href="/" className="logo"><span className="logo-mark"><Sparkles size={17} /></span><span>NEXORA<span className="logo-dot">.</span></span></a><div className="role-switcher" aria-label="Dashboard role"><span>Viewing as</span>{['Student', 'Instructor', 'Admin'].map((item) => <button key={item} className={role === item ? 'active' : ''} disabled={item === 'Admin'} onClick={() => setRole(item)}>{item}{item === 'Admin' && ' (disabled)'}</button>)}</div><div className="dashboard-user"><span>{email}</span><button onClick={logout} aria-label="Log out"><LogOut size={17} /></button></div></header> }
-
-function StudentBrowser({ onSelect }) {
-  const [page, setPage] = useState(1)
-  const perPage = 4
-  const visible = courses.slice((page - 1) * perPage, page * perPage)
-  const totalPages = Math.ceil(courses.length / perPage)
-  return <section className="instructor-content"><div className="instructor-heading"><div><span className="auth-kicker">STUDENT LIBRARY</span><h1>Learn something useful.</h1><p>Browse published courses and build your next skill.</p></div><div className="streak-card"><BookOpen size={22} /><div><strong>0 courses enrolled</strong><small>Start your learning journey</small></div></div></div><div className="management-toolbar"><div><strong>{courses.length}</strong><span>published courses</span></div><span className="auth-kicker">PAGE {page} / {totalPages}</span></div><div className="instructor-course-grid">{visible.map((course) => <article className="instructor-course-card" key={course.id}><div className="instructor-thumbnail"><img src={course.thumbnail} alt={`${course.title} thumbnail`} /><span className="status-badge">{course.price === 0 ? 'FREE' : `$${course.price.toFixed(2)}`}</span></div><div className="instructor-course-body"><div className="course-tags"><span>{course.category}</span><span>{course.difficulty}</span></div><h2>{course.title}</h2><p>{course.description}</p><div className="course-footer"><strong>{course.price === 0 ? 'Free' : `$${course.price.toFixed(2)}`}</strong><button className="button" onClick={() => onSelect(course)}>View Course <ChevronRight size={15} /></button></div></div></article>)}</div><div className="pagination"><button className="button button-secondary" disabled={page === 1} onClick={() => setPage(page - 1)}><ChevronLeft size={15} /> Previous</button><span>Page {page} of {totalPages}</span><button className="button button-secondary" disabled={page === totalPages} onClick={() => setPage(page + 1)}>Next <ChevronRight size={15} /></button></div></section>
-}
-
-function CourseDetails({ course, onBack }) {
-  const [enrolled, setEnrolled] = useState(false)
-  const [activeLesson, setActiveLesson] = useState(course.lessons[0])
-  const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState('')
-  const enroll = async () => { setLoading(true); setMessage(''); await new Promise((resolve) => setTimeout(resolve, 900)); setEnrolled(true); setLoading(false); setMessage('You are enrolled. All course materials are now unlocked.') }
-  const selectLesson = (lesson) => { if (!enrolled) { setMessage('Access Denied: You must be enrolled in this course to view this lesson.'); return } setActiveLesson(lesson) }
-  return <section className="instructor-content"><button className="text-link back-link" onClick={onBack}><ArrowLeft size={15} /> Back to courses</button><div className="detail-hero"><img src={course.thumbnail} alt={`${course.title} thumbnail`} /><div><span className="auth-kicker">{course.category} · {course.difficulty}</span><h1>{course.title}</h1><p>{course.description}</p><div className="course-tags"><span>{course.id}</span><span>{course.status}</span><span>{course.price === 0 ? 'free' : 'paid'}</span></div><button className="button enrollment-button" disabled={course.price > 0 || loading || enrolled} onClick={enroll}>{loading ? 'Enrolling...' : enrolled ? 'Enrolled' : course.price === 0 ? 'Enroll Now for Free' : 'Paid Enrollment Coming Soon'}</button></div></div>{message && <div className={`course-alert ${message.startsWith('Access') ? 'error' : 'success'}`} role="status">{message.startsWith('Access') ? <Lock size={17} /> : <CheckCircle2 size={17} />}{message}</div>}<div className="lesson-layout"><aside className="lesson-sidebar"><span className="auth-kicker">SYLLABUS</span><h2>{course.lessons.length} lessons</h2>{course.lessons.map((lesson) => <button className={activeLesson.id === lesson.id && enrolled ? 'lesson-item active' : 'lesson-item'} key={lesson.id} onClick={() => selectLesson(lesson)}><span>{enrolled ? <Play size={14} /> : <Lock size={14} />}</span><div><strong>{lesson.title}</strong><small>{lesson.duration} · {lesson.id}</small></div></button>)}</aside><div className="lesson-main">{enrolled ? <><div className="video-frame"><video controls poster={course.thumbnail} src={activeLesson.videoUrl}><track kind="captions" /></video></div><div className="notes-panel"><div><FileText size={18} /><strong>Lesson notes</strong></div><p>{activeLesson.notes}</p>{activeLesson.attachment && <a className="text-link" href="#download" onClick={(event) => event.preventDefault()}><Download size={15} /> Download {activeLesson.attachment}</a>}</div></> : <div className="locked-player"><Lock size={30} /><strong>Enrolled Students Only</strong><p>Please enroll to access video content and materials.</p></div>}</div></div></section>
-}
+import { useEffect, useState } from 'react'
+import AdminDashboard from '../../components/AdminDashboard'
+import InstructorDashboard from '../../components/InstructorDashboard'
+import StudentDashboard from '../../components/StudentDashboard'
 
 export default function DashboardPage() {
-  const [email, setEmail] = useState('student@example.com'); const [role, setRole] = useState('Student'); const [selectedCourse, setSelectedCourse] = useState(null)
-  useEffect(() => { const session = sessionStorage.getItem('nexora-auth'); if (!session) { window.location.href = '/auth'; return } try { setEmail(JSON.parse(session).email || 'student@example.com') } catch {} }, [])
-  const logout = () => { sessionStorage.removeItem('nexora-auth'); window.location.href = '/auth' }
-  return <main className="dashboard-page"><Header email={email} role={role} setRole={(next) => { setRole(next); setSelectedCourse(null) }} logout={logout} />{role === 'Student' ? (selectedCourse ? <CourseDetails course={selectedCourse} onBack={() => setSelectedCourse(null)} /> : <StudentBrowser onSelect={setSelectedCourse} />) : role === 'Instructor' ? <div className="instructor-content"><span className="auth-kicker">INSTRUCTOR WORKSPACE</span><h1>Course Management</h1><p>Your instructor tools are ready.</p></div> : <div className="instructor-content"><span className="auth-kicker">ADMIN WORKSPACE</span><h1>Admin access is unavailable.</h1><p>This role is reserved for platform administrators.</p></div>}</main>
+  const [email, setEmail] = useState('student@example.com')
+  const [role, setRole] = useState('Student')
+
+  useEffect(() => {
+    const session = sessionStorage.getItem('nexora-auth')
+    if (!session) { window.location.href = '/auth'; return }
+    try {
+      const parsed = JSON.parse(session)
+      setEmail(parsed.email || 'student@example.com')
+      setRole(parsed.role || (parsed.email?.startsWith('admin') ? 'Admin' : parsed.email?.startsWith('instructor') ? 'Instructor' : 'Student'))
+    } catch { setRole('Student') }
+  }, [])
+
+  function logout() { sessionStorage.removeItem('nexora-auth'); window.location.href = '/auth' }
+  if (role === 'Instructor') return <InstructorDashboard email={email} onLogout={logout} />
+  if (role === 'Admin') return <AdminDashboard email={email} onLogout={logout} />
+  return <StudentDashboard email={email} onLogout={logout} />
 }
