@@ -1,78 +1,39 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { ArrowRight, BookOpen, CheckCircle2, ImagePlus, Loader2, LogOut, Pencil, Play, Sparkles, Trophy, UploadCloud, X } from 'lucide-react'
+import { ArrowLeft, BookOpen, CheckCircle2, ChevronLeft, ChevronRight, Download, FileText, Lock, LogOut, Play, Sparkles, X } from 'lucide-react'
 
-const initialCourses = [
-  { id: 'course-1', title: 'Full-Stack Web Development', description: 'Build modern web applications from interface to deployment.', category: 'Development', difficulty: 'intermediate', price: 79, status: 'published', thumbnail: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=900&q=80' },
-  { id: 'course-2', title: 'Practical Data Science', description: 'Turn raw data into decisions with practical analysis skills.', category: 'Data Science', difficulty: 'beginner', price: 59, status: 'draft', thumbnail: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=900&q=80' },
-  { id: 'course-3', title: 'Product Design Systems', description: 'Create consistent, accessible systems that scale with teams.', category: 'Design', difficulty: 'advanced', price: 99, status: 'published', thumbnail: 'https://images.unsplash.com/photo-1558655146-d09347e92766?auto=format&fit=crop&w=900&q=80' },
+const courses = [
+  { id: 'course-1', title: 'Full-Stack Web Development', description: 'Build modern web applications from interface to deployment.', category: 'Development', difficulty: 'intermediate', price: 0, status: 'published', thumbnail: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=900&q=80', lessons: [{ id: 'lesson-1', title: 'The modern web stack', duration: '12 min', notes: 'Learn how the browser, server, and database work together.', videoUrl: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4', attachment: 'Web-stack-cheatsheet.pdf' }, { id: 'lesson-2', title: 'Build your first interface', duration: '24 min', notes: 'Compose accessible interfaces with reusable components.', videoUrl: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4', attachment: 'Interface-notes.pdf' }, { id: 'lesson-3', title: 'Ship to production', duration: '18 min', notes: 'A practical checklist for deploying your application.', videoUrl: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4' }] },
+  { id: 'course-2', title: 'Practical Data Science', description: 'Turn raw data into decisions with practical analysis skills.', category: 'Data Science', difficulty: 'beginner', price: 0, status: 'published', thumbnail: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=900&q=80', lessons: [{ id: 'lesson-4', title: 'Your data toolkit', duration: '16 min', notes: 'Set up a repeatable process for exploring datasets.', videoUrl: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4' }] },
+  { id: 'course-3', title: 'Product Design Systems', description: 'Create consistent, accessible systems that scale with teams.', category: 'Design', difficulty: 'advanced', price: 99, status: 'published', thumbnail: 'https://images.unsplash.com/photo-1558655146-d09347e92766?auto=format&fit=crop&w=900&q=80', lessons: [{ id: 'lesson-5', title: 'System foundations', duration: '20 min', notes: 'Define tokens, patterns, and principles for scale.', videoUrl: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4' }] },
+  { id: 'course-4', title: 'JavaScript Essentials', description: 'Master the language that powers the interactive web.', category: 'Development', difficulty: 'beginner', price: 49, status: 'published', thumbnail: 'https://images.unsplash.com/photo-1627398242454-45a1465c2479?auto=format&fit=crop&w=900&q=80', lessons: [{ id: 'lesson-6', title: 'Functions and flow', duration: '15 min', notes: 'Write clear, composable JavaScript.', videoUrl: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4' }] },
+  { id: 'course-5', title: 'UX Research Fieldwork', description: 'Turn conversations into confident product decisions.', category: 'Design', difficulty: 'intermediate', price: 0, status: 'published', thumbnail: 'https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=900&q=80', lessons: [{ id: 'lesson-7', title: 'Interview planning', duration: '14 min', notes: 'Prepare questions that reveal useful insight.', videoUrl: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4' }] },
 ]
 
-const emptyForm = { title: '', description: '', category: '', price: '0.00', difficulty: 'beginner', status: 'draft', thumbnail: '' }
+function Header({ email, role, setRole, logout }) { return <header className="dashboard-header"><a href="/" className="logo"><span className="logo-mark"><Sparkles size={17} /></span><span>NEXORA<span className="logo-dot">.</span></span></a><div className="role-switcher" aria-label="Dashboard role"><span>Viewing as</span>{['Student', 'Instructor', 'Admin'].map((item) => <button key={item} className={role === item ? 'active' : ''} disabled={item === 'Admin'} onClick={() => setRole(item)}>{item}{item === 'Admin' && ' (disabled)'}</button>)}</div><div className="dashboard-user"><span>{email}</span><button onClick={logout} aria-label="Log out"><LogOut size={17} /></button></div></header> }
 
-function delay(ms) { return new Promise((resolve) => setTimeout(resolve, ms)) }
+function StudentBrowser({ onSelect }) {
+  const [page, setPage] = useState(1)
+  const perPage = 4
+  const visible = courses.slice((page - 1) * perPage, page * perPage)
+  const totalPages = Math.ceil(courses.length / perPage)
+  return <section className="instructor-content"><div className="instructor-heading"><div><span className="auth-kicker">STUDENT LIBRARY</span><h1>Learn something useful.</h1><p>Browse published courses and build your next skill.</p></div><div className="streak-card"><BookOpen size={22} /><div><strong>0 courses enrolled</strong><small>Start your learning journey</small></div></div></div><div className="management-toolbar"><div><strong>{courses.length}</strong><span>published courses</span></div><span className="auth-kicker">PAGE {page} / {totalPages}</span></div><div className="instructor-course-grid">{visible.map((course) => <article className="instructor-course-card" key={course.id}><div className="instructor-thumbnail"><img src={course.thumbnail} alt={`${course.title} thumbnail`} /><span className="status-badge">{course.price === 0 ? 'FREE' : `$${course.price.toFixed(2)}`}</span></div><div className="instructor-course-body"><div className="course-tags"><span>{course.category}</span><span>{course.difficulty}</span></div><h2>{course.title}</h2><p>{course.description}</p><div className="course-footer"><strong>{course.price === 0 ? 'Free' : `$${course.price.toFixed(2)}`}</strong><button className="button" onClick={() => onSelect(course)}>View Course <ChevronRight size={15} /></button></div></div></article>)}</div><div className="pagination"><button className="button button-secondary" disabled={page === 1} onClick={() => setPage(page - 1)}><ChevronLeft size={15} /> Previous</button><span>Page {page} of {totalPages}</span><button className="button button-secondary" disabled={page === totalPages} onClick={() => setPage(page + 1)}>Next <ChevronRight size={15} /></button></div></section>
+}
+
+function CourseDetails({ course, onBack }) {
+  const [enrolled, setEnrolled] = useState(false)
+  const [activeLesson, setActiveLesson] = useState(course.lessons[0])
+  const [loading, setLoading] = useState(false)
+  const [message, setMessage] = useState('')
+  const enroll = async () => { setLoading(true); setMessage(''); await new Promise((resolve) => setTimeout(resolve, 900)); setEnrolled(true); setLoading(false); setMessage('You are enrolled. All course materials are now unlocked.') }
+  const selectLesson = (lesson) => { if (!enrolled) { setMessage('Access Denied: You must be enrolled in this course to view this lesson.'); return } setActiveLesson(lesson) }
+  return <section className="instructor-content"><button className="text-link back-link" onClick={onBack}><ArrowLeft size={15} /> Back to courses</button><div className="detail-hero"><img src={course.thumbnail} alt={`${course.title} thumbnail`} /><div><span className="auth-kicker">{course.category} · {course.difficulty}</span><h1>{course.title}</h1><p>{course.description}</p><div className="course-tags"><span>{course.id}</span><span>{course.status}</span><span>{course.price === 0 ? 'free' : 'paid'}</span></div><button className="button enrollment-button" disabled={course.price > 0 || loading || enrolled} onClick={enroll}>{loading ? 'Enrolling...' : enrolled ? 'Enrolled' : course.price === 0 ? 'Enroll Now for Free' : 'Paid Enrollment Coming Soon'}</button></div></div>{message && <div className={`course-alert ${message.startsWith('Access') ? 'error' : 'success'}`} role="status">{message.startsWith('Access') ? <Lock size={17} /> : <CheckCircle2 size={17} />}{message}</div>}<div className="lesson-layout"><aside className="lesson-sidebar"><span className="auth-kicker">SYLLABUS</span><h2>{course.lessons.length} lessons</h2>{course.lessons.map((lesson) => <button className={activeLesson.id === lesson.id && enrolled ? 'lesson-item active' : 'lesson-item'} key={lesson.id} onClick={() => selectLesson(lesson)}><span>{enrolled ? <Play size={14} /> : <Lock size={14} />}</span><div><strong>{lesson.title}</strong><small>{lesson.duration} · {lesson.id}</small></div></button>)}</aside><div className="lesson-main">{enrolled ? <><div className="video-frame"><video controls poster={course.thumbnail} src={activeLesson.videoUrl}><track kind="captions" /></video></div><div className="notes-panel"><div><FileText size={18} /><strong>Lesson notes</strong></div><p>{activeLesson.notes}</p>{activeLesson.attachment && <a className="text-link" href="#download" onClick={(event) => event.preventDefault()}><Download size={15} /> Download {activeLesson.attachment}</a>}</div></> : <div className="locked-player"><Lock size={30} /><strong>Enrolled Students Only</strong><p>Please enroll to access video content and materials.</p></div>}</div></div></section>
+}
 
 export default function DashboardPage() {
-  const [email, setEmail] = useState('instructor@example.com')
-  const [role, setRole] = useState('Instructor')
-  const [courses, setCourses] = useState(initialCourses)
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [form, setForm] = useState(emptyForm)
-  const [isUploadingImage, setIsUploadingImage] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
-
-  useEffect(() => {
-    const session = sessionStorage.getItem('nexora-auth')
-    if (!session) { window.location.href = '/auth'; return }
-    try { setEmail(JSON.parse(session).email || 'instructor@example.com') } catch { setEmail('instructor@example.com') }
-  }, [])
-
-  const canCreate = useMemo(() => form.title.trim() && form.category.trim() && form.thumbnail.startsWith('https://') && !isUploadingImage && !isSubmitting, [form, isUploadingImage, isSubmitting])
-
-  function logout() { sessionStorage.removeItem('nexora-auth'); window.location.href = '/auth' }
-  function openModal() { setError(''); setSuccess(''); setForm(emptyForm); setIsModalOpen(true) }
-  function closeModal() { if (!isUploadingImage && !isSubmitting) setIsModalOpen(false) }
-  function updateField(event) { setForm((current) => ({ ...current, [event.target.name]: event.target.value })); setError('') }
-
-  async function uploadThumbnail(file) {
-    if (!file || !file.type.startsWith('image/')) { setError('Please choose a valid image file.'); return }
-    if (file.size > 5 * 1024 * 1024) { setError('Thumbnail must be smaller than 5MB.'); return }
-    setError(''); setIsUploadingImage(true)
-    try {
-      await delay(650)
-      const signature = { success: true, signature: 'mock-signature', timestamp: Math.floor(Date.now() / 1000), folder: 'nexora/courses', apiKey: 'mock-api-key', cloudName: 'mock-cloud' }
-      if (!signature.success) throw new Error('Unable to generate upload signature.')
-      await delay(900)
-      const secureUrl = `https://res.cloudinary.com/demo/image/upload/v1/nexora/courses/${encodeURIComponent(file.name.replace(/\.[^/.]+$/, ''))}.jpg`
-      setForm((current) => ({ ...current, thumbnail: secureUrl }))
-    } catch (uploadError) { setError(uploadError.message || 'Thumbnail upload failed.') } finally { setIsUploadingImage(false) }
-  }
-
-  function handleFileChange(event) { uploadThumbnail(event.target.files?.[0]) }
-  function handleDrop(event) { event.preventDefault(); uploadThumbnail(event.dataTransfer.files?.[0]) }
-
-  async function createCourse(event) {
-    event.preventDefault()
-    if (!form.title.trim() || !form.category.trim() || !form.thumbnail.startsWith('https://') && !form.thumbnail.startsWith('blob:')) { setError('Add a title, category, and upload a thumbnail before creating the course.'); return }
-    setError(''); setIsSubmitting(true)
-    await delay(850)
-    const course = { ...form, id: `course-${Date.now()}`, title: form.title.trim(), category: form.category.trim(), price: Number(form.price) || 0 }
-    setCourses((current) => [course, ...current]); setSuccess('Course is created successfully.')
-    await delay(1500); setForm(emptyForm); setSuccess(''); setIsSubmitting(false); setIsModalOpen(false)
-  }
-
-  return (
-    <main className="dashboard-page">
-      <header className="dashboard-header"><a href="/" className="logo"><span className="logo-mark"><Sparkles size={17} /></span><span>NEXORA<span className="logo-dot">.</span></span></a><div className="dashboard-user"><span>{email}</span><button onClick={logout} aria-label="Log out"><LogOut size={17} /></button></div></header>
-      <section className="instructor-content">
-        <div className="instructor-heading"><div><span className="auth-kicker">INSTRUCTOR WORKSPACE</span><h1>Course Management</h1><p>Create and manage your courses.</p></div><div className="role-switcher" aria-label="Dashboard role"><span>Viewing as</span>{['Instructor', 'Student', 'Admin'].map((item) => <button key={item} className={role === item ? 'active' : ''} onClick={() => setRole(item)}>{item}</button>)}</div></div>
-        <div className="management-toolbar"><div><strong>{courses.length}</strong><span>courses in your library</span></div><button className="button" onClick={openModal}><ImagePlus size={17} /> Create New Course</button></div>
-        <div className="instructor-course-grid">{courses.map((course) => <article className="instructor-course-card" key={course.id}><div className="instructor-thumbnail"><img src={course.thumbnail} alt={`${course.title} thumbnail`} /><span className={`status-badge ${course.status}`}>{course.status}</span></div><div className="instructor-course-body"><div className="course-tags"><span>{course.category}</span><span>{course.difficulty}</span></div><h2>{course.title}</h2><p>{course.description}</p><div className="course-footer"><strong>${Number(course.price).toFixed(2)}</strong><button aria-label={`Manage ${course.title}`}><Pencil size={15} /> Manage</button></div></div></article>)}</div>
-      </section>
-      {isModalOpen && <div className="modal-backdrop" role="presentation" onMouseDown={closeModal}><section className="course-modal" role="dialog" aria-modal="true" aria-labelledby="create-course-title" onMouseDown={(event) => event.stopPropagation()}><button className="modal-close" onClick={closeModal} aria-label="Close modal"><X size={18} /></button><span className="auth-kicker">NEW COURSE</span><h2 id="create-course-title">Create a course</h2><p className="modal-copy">Add the essentials and publish when your course is ready.</p>{error && <div className="course-alert error" role="alert">{error}</div>}{success && <div className="course-alert success" role="status"><CheckCircle2 size={17} />{success}</div>}<form className="course-form" onSubmit={createCourse}><label>Title<input name="title" value={form.title} onChange={updateField} maxLength={255} placeholder="e.g. Mastering React" required /></label><label>Description<textarea name="description" value={form.description} onChange={updateField} rows="3" placeholder="What will students learn?" /></label><div className="form-row"><label>Category<input name="category" value={form.category} onChange={updateField} placeholder="Development" required /></label><label>Price<input name="price" type="number" min="0" step="0.01" value={form.price} onChange={updateField} /></label></div><div className="form-row"><label>Difficulty<select name="difficulty" value={form.difficulty} onChange={updateField}><option>beginner</option><option>intermediate</option><option>advanced</option></select></label><label>Status<select name="status" value={form.status} onChange={updateField}><option>draft</option><option>published</option><option>archived</option></select></label></div><div className={`thumbnail-dropzone ${form.thumbnail ? 'has-image' : ''}`} onDragOver={(event) => event.preventDefault()} onDrop={handleDrop}>{form.thumbnail ? <><img src={form.thumbnail} alt="Selected course thumbnail preview" /><button type="button" onClick={() => setForm((current) => ({ ...current, thumbnail: '' }))}>Change image</button></> : isUploadingImage ? <><Loader2 className="spin" size={25} /><strong>Generating upload signature &amp; uploading...</strong></> : <><UploadCloud size={28} /><strong>Drag &amp; drop thumbnail or click to browse</strong><span>PNG, JPG up to 5MB</span><input type="file" accept="image/*" onChange={handleFileChange} disabled={isUploadingImage || isSubmitting} /></>}</div><button className="button create-course-button" type="submit" disabled={!canCreate}>{isSubmitting ? <><Loader2 className="spin" size={17} /> Creating Course...</> : 'Create Course'}</button>{!form.thumbnail && <small className="form-hint">Upload a thumbnail to enable course creation.</small>}</form></section></div>}
-    </main>
-  )
+  const [email, setEmail] = useState('student@example.com'); const [role, setRole] = useState('Student'); const [selectedCourse, setSelectedCourse] = useState(null)
+  useEffect(() => { const session = sessionStorage.getItem('nexora-auth'); if (!session) { window.location.href = '/auth'; return } try { setEmail(JSON.parse(session).email || 'student@example.com') } catch {} }, [])
+  const logout = () => { sessionStorage.removeItem('nexora-auth'); window.location.href = '/auth' }
+  return <main className="dashboard-page"><Header email={email} role={role} setRole={(next) => { setRole(next); setSelectedCourse(null) }} logout={logout} />{role === 'Student' ? (selectedCourse ? <CourseDetails course={selectedCourse} onBack={() => setSelectedCourse(null)} /> : <StudentBrowser onSelect={setSelectedCourse} />) : role === 'Instructor' ? <div className="instructor-content"><span className="auth-kicker">INSTRUCTOR WORKSPACE</span><h1>Course Management</h1><p>Your instructor tools are ready.</p></div> : <div className="instructor-content"><span className="auth-kicker">ADMIN WORKSPACE</span><h1>Admin access is unavailable.</h1><p>This role is reserved for platform administrators.</p></div>}</main>
 }
