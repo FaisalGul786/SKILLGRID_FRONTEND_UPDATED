@@ -16,7 +16,7 @@ import {
   X,
 } from 'lucide-react'
 
-import { api } from '../../lib/apiClient'
+import { api } from '../lib/apiClient'
 const initialCourses = [
   {
     id: 'course-1',
